@@ -15,25 +15,27 @@ interface Options {
 }
 
 public class OptionsScreen {
-    private String accountNumber;
+    private static String accountNumber;
 
-    public void main(String[] args) throws IOException {
+    public void main(String[] args) {
         OptionsScreen optionsScreen = new OptionsScreen();
         Hidden hidden = new Hidden();
         Scanner scanner = new Scanner(System.in);
         int key = 0;
         while (key == 0) {
             optionsScreen.showIdleMessage();
-            key = System.in.read();
+            try {
+                key = System.in.read();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         if (optionsScreen.authenticationScreen()) {
             optionsScreen.showOptions();
             int option = scanner.nextInt();
             while (option == 1 || option == 2 || option == 3 || option == 4 || option == 5) {
-                option = scanner.nextInt();
-                optionsScreen.showOptions();
                 if (option == 1) {
-                    System.out.println("Your current balance is: " + hidden.getBalance(accountNumber));
+                    System.out.println("Your current balance is: " + hidden.getBalance(this.accountNumber));
                 } else if (option == 2) {
                     System.out.print("Enter the amount to be withdrawn: ");
                     double amount = scanner.nextDouble();
@@ -60,6 +62,8 @@ public class OptionsScreen {
                         hidden.addBalance(destAccountNumberTwo, amount);
                     }
                 }
+                optionsScreen.showOptions();
+                option = scanner.nextInt();
             }
         }
     }
@@ -83,10 +87,10 @@ public class OptionsScreen {
         }
         this.accountNumber = accountNumber;
         System.out.print("Please enter your PIN: ");
-        int PIN = scanner.nextInt();
+        String PIN = scanner.next();
         while (!pinPattern.matcher(String.valueOf(PIN)).matches()) {
             System.out.print("Please enter a valid PIN containing 5 digits: ");
-            PIN = scanner.nextInt();
+            PIN = scanner.next();
         }
         Hidden hidden = new Hidden();
         while (!hidden.isCorrectPIN(accountNumber, PIN)) {
@@ -95,7 +99,7 @@ public class OptionsScreen {
                 System.out
                         .println("Incorrect PIN. " + (5 - hidden.numIncorrectPINAttempts + 1) + " attempts remaining");
                 System.out.print("Please enter your PIN: ");
-                PIN = scanner.nextInt();
+                PIN = scanner.next();
             }
             if (hidden.numIncorrectPINAttempts == 5) {
                 hidden.blockAccount(accountNumber);
