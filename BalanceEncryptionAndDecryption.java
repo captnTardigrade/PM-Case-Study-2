@@ -1,6 +1,5 @@
 import java.security.spec.KeySpec;
 import java.util.Base64;
-
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -48,10 +47,6 @@ public class BalanceEncryptionAndDecryption {
             System.out.println("Error while decrypting: " + e.toString());
         }
         return null;
-    }
-
-    public static void main(String[] args) {
-
     }
 }
 

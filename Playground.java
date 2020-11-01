@@ -25,6 +25,8 @@ class Playground {
 	}
 
 	public static void main(String args[]) {
+		Playground playground = new Playground();
+		playground.populateDummyData();
 		OptionsScreen optionsScreen = new OptionsScreen();
 		optionsScreen.main(args);
 	}
@@ -33,11 +35,11 @@ class Playground {
 		FileWriter fw;
 		FileWriter fw2;
 		try {
-			fw = new FileWriter("./EncryptedData.csv", true);
+			fw = new FileWriter("EncryptedData.csv", true);
 			BufferedWriter bw = new BufferedWriter(fw);
 			PrintWriter pw = new PrintWriter(bw);
 
-			fw2 = new FileWriter("./Data.csv", true);
+			fw2 = new FileWriter("Data.csv", true);
 			BufferedWriter bw2 = new BufferedWriter(fw2);
 			PrintWriter pw2 = new PrintWriter(bw2);
 
