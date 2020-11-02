@@ -23,35 +23,88 @@ public class OptionsScreen {
         while (true) {
             optionsScreen.showIdleMessage();
             if (optionsScreen.authenticationScreen()) {
-                optionsScreen.showOptions();
-                int option = scanner.nextInt();
                 while (true) {
+                    optionsScreen.showOptions();
+                    int option = scanner.nextInt();
+
                     if (option == 1) {
                         System.out.println("Your current balance is: " + hidden.getBalance(this.accountNumber));
                     } else if (option == 2) {
-                        System.out.print("Enter the amount to be withdrawn: ");
+                        System.out.println("Enter the amount to be withdrawn: ");
+                        System.out.println("To return to the main menu, enter -1");
                         double amount = scanner.nextDouble();
-                        hidden.removeBalance(accountNumber, amount);
+                        if (amount != -1.0) {
+                            while (amount <= 0) {
+                                System.out.println("Please enter a valid amount: ");
+                                amount = scanner.nextDouble();
+                            }
+                            hidden.removeBalance(accountNumber, amount);
+                        } else {
+                            continue;
+                        }
                     } else if (option == 3) {
                         System.out.print("Enter the amount to be deposited: ");
                         double amount = scanner.nextDouble();
-                        hidden.addBalance(accountNumber, amount);
-                    } else if (option == 4) {
-                        System.out.print("Please enter the reciever's account number: ");
-                        String destAccountNumberOne = scanner.next();
-                        System.out.println("Please re-enter the reciever's account number: ");
-                        String destAccountNumberTwo = scanner.next();
-                        while (destAccountNumberOne != destAccountNumberTwo) {
-                            System.out.println("Reciever's account number don't match! Please confirm again.");
-                            System.out.print("Please enter the reciever's account number: ");
-                            destAccountNumberOne = scanner.next();
-                            System.out.println("Please re-enter the reciever's account number: ");
-                            destAccountNumberTwo = scanner.next();
+                        while (amount <= 0) {
+                            System.out.println("Please enter a valid amount: ");
+                            amount = scanner.nextDouble();
                         }
-                        if (destAccountNumberOne == destAccountNumberTwo) {
-                            System.out.print("Enter the amount to be transferred: ");
-                            double amount = scanner.nextDouble();
-                            hidden.addBalance(destAccountNumberTwo, amount);
+                        hidden.addBalance(accountNumber, amount);
+                        hidden.sendMessage(accountNumber, 1);
+                    } else if (option == 4) {
+                        System.out.println("Enter 1 for cash transfer");
+                        System.out.println("Enter 2 for digital transfer");
+                        System.out.println("To return to the main menu, please enter -1");
+                        int mode = scanner.nextInt();
+                        if (mode == 1) { // this corresponds to cash transfer
+                            System.out.println("Please deposit the amount below: ");
+                            double cash = scanner.nextDouble(); // not adding a check if it is greater than zero
+                                                                // because
+                                                                // this amount is inferred by the hardware and not
+                                                                // entered by the customer
+                            System.out.print("Please enter the reciever's account number: ");
+                            String destAccountNumberOne = scanner.next();
+                            System.out.print("Please re-enter the reciever's account number: ");
+                            String destAccountNumberTwo = scanner.next();
+                            while (!destAccountNumberOne.equals(destAccountNumberTwo)) {
+                                System.out.println("Reciever's account number don't match! Please confirm again.");
+                                System.out.print("Please enter the reciever's account number: ");
+                                destAccountNumberOne = scanner.next();
+                                System.out.print("Please re-enter the reciever's account number: ");
+                                destAccountNumberTwo = scanner.next();
+                            }
+                            if (destAccountNumberOne.equals(destAccountNumberTwo)) {
+                                hidden.addBalance(destAccountNumberTwo, cash);
+                                System.out.println("Amount transferred successfully.");
+                            }
+
+                        } else if (mode == 2) { // this corresponds to digital transfer
+                            System.out.print("Enter the amount to be transferred from your current balance: ");
+
+                            double digital = scanner.nextDouble();
+                            while (digital > hidden.getBalance(accountNumber)) {
+                                System.out.println("Insuffient funds. Please enter value less than: "
+                                        + hidden.getBalance(accountNumber));
+                                digital = scanner.nextDouble();
+                            }
+                            System.out.print("Please enter the reciever's account number: ");
+                            String destAccountNumberOne = scanner.next();
+                            System.out.println("Please re-enter the reciever's account number: ");
+                            String destAccountNumberTwo = scanner.next();
+                            while (destAccountNumberOne != destAccountNumberTwo) {
+                                System.out.println("Reciever's account number don't match! Please confirm again.");
+                                System.out.print("Please enter the reciever's account number: ");
+                                destAccountNumberOne = scanner.next();
+                                System.out.println("Please re-enter the reciever's account number: ");
+                                destAccountNumberTwo = scanner.next();
+                            }
+                            if (destAccountNumberOne == destAccountNumberTwo) {
+
+                                hidden.addBalance(destAccountNumberTwo, digital);
+                            }
+                            hidden.sendMessage(accountNumber, 1);
+                        } else {
+                            break;
                         }
                     } else if (option == 5) {
                         hidden.changePIN(accountNumber);
@@ -60,6 +113,7 @@ public class OptionsScreen {
                     }
                     optionsScreen.showOptions();
                     option = scanner.nextInt();
+
                 }
             }
         }
