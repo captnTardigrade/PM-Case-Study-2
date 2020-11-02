@@ -17,7 +17,7 @@ interface HiddenMechanism {
 
     void sendMessage(String account, int status);
 
-    double deCryptBalance(String key);
+    void changePIN(String accountNumber);
 }
 
 public class Hidden implements HiddenMechanism {
@@ -61,24 +61,6 @@ public class Hidden implements HiddenMechanism {
         return -1;
     }
 
-    public String getData(String accountNumber) {
-        try {
-            FileReader fr = new FileReader("EncryptedData.csv");
-            BufferedReader encrypted = new BufferedReader(fr);
-            String currentLine;
-            while ((currentLine = encrypted.readLine()) != null) {
-                if (currentLine.split(",")[1].equals(toHexString(getSHA(accountNumber)))) {
-                    encrypted.close();
-                    return currentLine;
-                }
-            }
-            encrypted.close();
-        } catch (IOException | NumberFormatException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-    
     public void addBalance(String accountNumber, double amount) {
 
         double updatedAmount = this.getBalance(accountNumber) + amount;
@@ -92,32 +74,34 @@ public class Hidden implements HiddenMechanism {
             BufferedReader br = new BufferedReader(fr);
             FileWriter fw = new FileWriter("./encryptedtemp.csv");
             BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter encryptedReader = new PrintWriter(bw);
+            PrintWriter encryptedWriter = new PrintWriter(bw);
 
             FileReader fr2 = new FileReader("./Data.csv");
             BufferedReader br2 = new BufferedReader(fr2);
             FileWriter fw2 = new FileWriter("./datatemp.csv");
             BufferedWriter bw2 = new BufferedWriter(fw2);
-            PrintWriter dataReader = new PrintWriter(bw2);
-            
+            PrintWriter dataWriter = new PrintWriter(bw2);
+
             String encryptedCurrentLine;
             String dataCurrentLine;
             while ((encryptedCurrentLine = br.readLine()) != null && (dataCurrentLine = br2.readLine()) != null) {
                 String[] encryptedData = encryptedCurrentLine.split(",");
                 String[] dataData = dataCurrentLine.split(",");
                 if (encryptedData[1].equals(toHexString(getSHA(accountNumber)))) {
-                    encryptedReader.println(encryptedData[0] + "," + encryptedData[1] + "," + encryptedData[2] + ","
-                            + balanceEncryptionAndDecryption.encrypt(String.valueOf(updatedAmount)));
-                    dataReader.println(dataData[0] + "," + dataData[1] + "," + dataData[2] + "," + updatedAmount);
+                    encryptedWriter.println(encryptedData[0] + "," + encryptedData[1] + "," + encryptedData[2] + ","
+                            + balanceEncryptionAndDecryption.encrypt(String.valueOf(updatedAmount)) + ","
+                            + encryptedData[4]);
+                    dataWriter.println(dataData[0] + "," + dataData[1] + "," + dataData[2] + "," + updatedAmount + ","
+                            + dataData[4]);
                 } else {
-                    encryptedReader.println(encryptedCurrentLine);
-                    dataReader.println(dataCurrentLine);
+                    encryptedWriter.println(encryptedCurrentLine);
+                    dataWriter.println(dataCurrentLine);
                 }
             }
-            encryptedReader.flush();
-            dataReader.flush();
-            encryptedReader.close();
-            dataReader.close();
+            encryptedWriter.flush();
+            dataWriter.flush();
+            encryptedWriter.close();
+            dataWriter.close();
             br.close();
             br2.close();
             File encryptedDump = new File("./encryptedtemp.csv");
@@ -132,17 +116,141 @@ public class Hidden implements HiddenMechanism {
     }
 
     public void removeBalance(String accountNumber, double amount) {
+        double updatedAmount = this.getBalance(accountNumber) - amount;
+        if (updatedAmount >= 0) {
+            File encryptedOld = new File("./EncryptedData.csv");
+            File dataOld = new File("./Data.csv");
+
+            BalanceEncryptionAndDecryption balanceEncryptionAndDecryption = new BalanceEncryptionAndDecryption();
+            try {
+                FileReader fr = new FileReader("./EncryptedData.csv");
+                BufferedReader br = new BufferedReader(fr);
+                FileWriter fw = new FileWriter("./encryptedtemp.csv");
+                BufferedWriter bw = new BufferedWriter(fw);
+                PrintWriter encryptedWriter = new PrintWriter(bw);
+
+                FileReader fr2 = new FileReader("./Data.csv");
+                BufferedReader br2 = new BufferedReader(fr2);
+                FileWriter fw2 = new FileWriter("./datatemp.csv");
+                BufferedWriter bw2 = new BufferedWriter(fw2);
+                PrintWriter dataWriter = new PrintWriter(bw2);
+
+                String encryptedCurrentLine;
+                String dataCurrentLine;
+                while ((encryptedCurrentLine = br.readLine()) != null && (dataCurrentLine = br2.readLine()) != null) {
+                    String[] encryptedData = encryptedCurrentLine.split(",");
+                    String[] dataData = dataCurrentLine.split(",");
+                    if (encryptedData[1].equals(toHexString(getSHA(accountNumber)))) {
+                        encryptedWriter.println(encryptedData[0] + "," + encryptedData[1] + "," + encryptedData[2] + ","
+                                + balanceEncryptionAndDecryption.encrypt(String.valueOf(updatedAmount))
+                                + encryptedData[4] + ",");
+                        dataWriter.println(dataData[0] + "," + dataData[1] + "," + dataData[2] + "," + updatedAmount
+                                + dataData[4]);
+                    } else {
+                        encryptedWriter.println(encryptedCurrentLine);
+                        dataWriter.println(dataCurrentLine);
+                    }
+                }
+                encryptedWriter.flush();
+                dataWriter.flush();
+                encryptedWriter.close();
+                dataWriter.close();
+                br.close();
+                br2.close();
+                File encryptedDump = new File("./encryptedtemp.csv");
+                encryptedOld.delete();
+                encryptedDump.renameTo(encryptedOld);
+                File dataDump = new File("./datatemp.csv");
+                dataOld.delete();
+                dataDump.renameTo(dataOld);
+            } catch (IOException | NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out
+                    .println("Insufficient balance! Please enter a value less than " + this.getBalance(accountNumber));
+        }
+    }
+
+    public boolean isBlocked(String accountNumber) {
+        try {
+            FileReader fr = new FileReader("EncryptedData.csv");
+            BufferedReader encrypted = new BufferedReader(fr);
+            String currentLine;
+            while ((currentLine = encrypted.readLine()) != null) {
+                if (currentLine.split(",")[1].equals(toHexString(getSHA(accountNumber)))) {
+                    encrypted.close();
+                    return currentLine.split(",")[4].equals(toHexString(getSHA(String.valueOf(true))));
+                }
+            }
+            encrypted.close();
+        } catch (IOException | NumberFormatException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
     public void blockAccount(String accountNumber) {
+        File encryptedOld = new File("./EncryptedData.csv");
+        File dataOld = new File("./Data.csv");
+        try {
+            FileReader fr = new FileReader("./EncryptedData.csv");
+            BufferedReader br = new BufferedReader(fr);
+            FileWriter fw = new FileWriter("./encryptedtemp.csv");
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter encryptedWriter = new PrintWriter(bw);
+
+            FileReader fr2 = new FileReader("./Data.csv");
+            BufferedReader br2 = new BufferedReader(fr2);
+            FileWriter fw2 = new FileWriter("./datatemp.csv");
+            BufferedWriter bw2 = new BufferedWriter(fw2);
+            PrintWriter dataWriter = new PrintWriter(bw2);
+
+            String encryptedCurrentLine;
+            String dataCurrentLine;
+            while ((encryptedCurrentLine = br.readLine()) != null && (dataCurrentLine = br2.readLine()) != null) {
+                String[] encryptedData = encryptedCurrentLine.split(",");
+                String[] dataData = dataCurrentLine.split(",");
+                if (encryptedData[1].equals(toHexString(getSHA(String.valueOf(accountNumber))))) {
+                    encryptedWriter.println(encryptedData[0] + "," + encryptedData[1] + "," + encryptedData[2] + ","
+                            + encryptedData[3] + "," + toHexString(getSHA(String.valueOf(true))));
+                    dataWriter.println(
+                            dataData[0] + "," + dataData[1] + "," + dataData[2] + "," + dataData[3] + "," + true);
+                } else {
+                    encryptedWriter.println(encryptedCurrentLine);
+                    dataWriter.println(dataCurrentLine);
+                }
+            }
+            encryptedWriter.flush();
+            dataWriter.flush();
+            encryptedWriter.close();
+            dataWriter.close();
+            br.close();
+            br2.close();
+            File encryptedDump = new File("./encryptedtemp.csv");
+            encryptedOld.delete();
+            encryptedDump.renameTo(encryptedOld);
+            File dataDump = new File("./datatemp.csv");
+            dataOld.delete();
+            dataDump.renameTo(dataOld);
+        } catch (IOException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void sendMessage(String account, int status) {
-    }
-
-    public double deCryptBalance(String encrypted) {
-        BalanceEncryptionAndDecryption balanceEncryptionAndDecryption = new BalanceEncryptionAndDecryption();
-        return Double.parseDouble(balanceEncryptionAndDecryption.decrypt(encrypted));
+    public void sendMessage(String accountNumber, int status) {
+        if (status == 1) {
+            System.out.println("Transaction successful. Your current balance is: " + getBalance(accountNumber));
+        } else if (status == 2) {
+            System.out.println("Transaction unsuccesful. No amount has been debited. Your current balance is: "
+                    + getBalance(accountNumber));
+        } else if (status == 3) {
+            System.out.println(
+                    "Your account has been blocked for security reasons. Please visit your nearest branch to unblock.");
+        } else if (status == 4) {
+            System.out.println(
+                    "Your ATM PIN has been successfully changed. If this wasn't you, please send IT WASN'T ME to +91 1234567890 ASAP.");
+        }
     }
 
     public byte[] getSHA(String input) throws NoSuchAlgorithmException {
@@ -157,6 +265,9 @@ public class Hidden implements HiddenMechanism {
             hexString.insert(0, '0');
         }
         return hexString.toString();
+    }
+
+    public void changePIN(String accountNumber) {
     }
 
 }

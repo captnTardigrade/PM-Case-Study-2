@@ -53,8 +53,9 @@ class Playground {
 				double balance = ThreadLocalRandom.current().nextDouble(1000, 1000000);
 				pw.println(toHexString(getSHA(PIN)) + "," + toHexString(getSHA(accountNumber)) + ","
 						+ toHexString(getSHA(phoneNumber)) + ","
-						+ balanceEncryptionAndDecryption.encrypt(String.valueOf(balance)));
-				pw2.println(PIN + "," + accountNumber + "," + phoneNumber + "," + balance);
+						+ balanceEncryptionAndDecryption.encrypt(String.valueOf(balance)) + ","
+						+ toHexString(getSHA(String.valueOf(false))));
+				pw2.println(PIN + "," + accountNumber + "," + phoneNumber + "," + balance + "," + false);
 				pw2.flush();
 				pw.flush();
 			}

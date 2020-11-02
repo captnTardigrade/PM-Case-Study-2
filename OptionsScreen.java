@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -21,50 +20,47 @@ public class OptionsScreen {
         OptionsScreen optionsScreen = new OptionsScreen();
         Hidden hidden = new Hidden();
         Scanner scanner = new Scanner(System.in);
-        int key = 0;
-        while (key == 0) {
+        while (true) {
             optionsScreen.showIdleMessage();
-            try {
-                key = System.in.read();
-                if (optionsScreen.authenticationScreen()) {
-                    optionsScreen.showOptions();
-                    int option = scanner.nextInt();
-                    while (option == 1 || option == 2 || option == 3 || option == 4 || option == 5) {
-                        if (option == 1) {
-                            System.out.println("Your current balance is: " + hidden.getBalance(this.accountNumber));
-                        } else if (option == 2) {
-                            System.out.print("Enter the amount to be withdrawn: ");
-                            double amount = scanner.nextDouble();
-                            hidden.removeBalance(accountNumber, amount);
-                        } else if (option == 3) {
-                            System.out.print("Enter the amount to be deposited: ");
-                            double amount = scanner.nextDouble();
-                            hidden.addBalance(accountNumber, amount);
-                        } else if (option == 4) {
+            if (optionsScreen.authenticationScreen()) {
+                optionsScreen.showOptions();
+                int option = scanner.nextInt();
+                while (true) {
+                    if (option == 1) {
+                        System.out.println("Your current balance is: " + hidden.getBalance(this.accountNumber));
+                    } else if (option == 2) {
+                        System.out.print("Enter the amount to be withdrawn: ");
+                        double amount = scanner.nextDouble();
+                        hidden.removeBalance(accountNumber, amount);
+                    } else if (option == 3) {
+                        System.out.print("Enter the amount to be deposited: ");
+                        double amount = scanner.nextDouble();
+                        hidden.addBalance(accountNumber, amount);
+                    } else if (option == 4) {
+                        System.out.print("Please enter the reciever's account number: ");
+                        String destAccountNumberOne = scanner.next();
+                        System.out.println("Please re-enter the reciever's account number: ");
+                        String destAccountNumberTwo = scanner.next();
+                        while (destAccountNumberOne != destAccountNumberTwo) {
+                            System.out.println("Reciever's account number don't match! Please confirm again.");
                             System.out.print("Please enter the reciever's account number: ");
-                            String destAccountNumberOne = scanner.next();
+                            destAccountNumberOne = scanner.next();
                             System.out.println("Please re-enter the reciever's account number: ");
-                            String destAccountNumberTwo = scanner.next();
-                            while (destAccountNumberOne != destAccountNumberTwo) {
-                                System.out.println("Reciever's account number don't match! Please confirm again.");
-                                System.out.print("Please enter the reciever's account number: ");
-                                destAccountNumberOne = scanner.next();
-                                System.out.println("Please re-enter the reciever's account number: ");
-                                destAccountNumberTwo = scanner.next();
-                            }
-                            if (destAccountNumberOne == destAccountNumberTwo) {
-                                System.out.print("Enter the amount to be transferred: ");
-                                double amount = scanner.nextDouble();
-                                hidden.addBalance(destAccountNumberTwo, amount);
-                            }
+                            destAccountNumberTwo = scanner.next();
                         }
-                        optionsScreen.showOptions();
-                        option = scanner.nextInt();
+                        if (destAccountNumberOne == destAccountNumberTwo) {
+                            System.out.print("Enter the amount to be transferred: ");
+                            double amount = scanner.nextDouble();
+                            hidden.addBalance(destAccountNumberTwo, amount);
+                        }
+                    } else if (option == 5) {
+                        hidden.changePIN(accountNumber);
+                    } else {
+                        break;
                     }
+                    optionsScreen.showOptions();
+                    option = scanner.nextInt();
                 }
-            } 
-            catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
@@ -73,6 +69,8 @@ public class OptionsScreen {
         System.out.println("Advertisement 1");
         System.out.println("Advertisement 2");
         System.out.println("Press enter to continue");
+        Scanner scanner = new Scanner(System.in);
+        String key = scanner.nextLine();
     }
 
     private boolean authenticationScreen() {
@@ -83,7 +81,7 @@ public class OptionsScreen {
         System.out.print("Please enter your account number: ");
         String accountNumber = scanner.next();
         while (!accountPattern.matcher(accountNumber).matches()) {
-            System.out.print("Please enter a valid account number:");
+            System.out.print("Please enter a valid account number: ");
             accountNumber = scanner.next();
         }
         this.accountNumber = accountNumber;
@@ -94,6 +92,11 @@ public class OptionsScreen {
             PIN = scanner.next();
         }
         Hidden hidden = new Hidden();
+        if (hidden.isBlocked(accountNumber)) {
+            System.out.println("Your account is blocked. Please contact your nearest branch.");
+            System.out.println();
+            return false;
+        }
         while (!hidden.isCorrectPIN(accountNumber, PIN)) {
             hidden.numIncorrectPINAttempts += 1;
             if (hidden.numIncorrectPINAttempts > 3) {
@@ -113,10 +116,12 @@ public class OptionsScreen {
     }
 
     private void showOptions() {
+        System.out.println();
         System.out.println("Enter 1 to show account balance");
         System.out.println("Enter 2 to withdraw cash");
         System.out.println("Enter 3 to deposit cash");
         System.out.println("Enter 4 to transfer money");
+        System.out.println("Enter 5 to change PIN");
         System.out.println("Click any other button to exit");
     }
 }
