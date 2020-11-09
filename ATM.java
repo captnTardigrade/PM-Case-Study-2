@@ -8,7 +8,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ThreadLocalRandom;
 
-class Playground {
+public class ATM {
 	public static void main(String args[]) {
 		// Playground playground = new Playground();
 		// playground.populateDummyData();
