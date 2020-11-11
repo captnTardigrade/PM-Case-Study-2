@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Pattern;
 
 //citation: https://www.geeksforgeeks.org/sha-256-hash-in-java/ used for calculating SHA-256 hash
 
@@ -273,6 +274,7 @@ public class Hidden implements HiddenMechanism {
 
     public void changePIN(String accountNumber) {
         String generatedOTP = String.format("%05d", ThreadLocalRandom.current().nextInt(0, 10000));
+        Pattern pinPattern = Pattern.compile("[0-9]{5}");
         System.out.println("Your OTP is: " + generatedOTP); // this is sent as a message and not actually displayed on
                                                             // the screen
         System.out.print("Please enter the OTP: ");
@@ -281,6 +283,10 @@ public class Hidden implements HiddenMechanism {
         if (OTP.equals(generatedOTP)) {
             System.out.print("Enter the new PIN containing 5 digits: ");
             String newPIN = scanner.next();
+            while(!pinPattern.matcher(newPIN).matches()){
+                System.out.print("Please enter a PIN containing 5 digits: ");
+                newPIN = scanner.next();
+            }
             System.out.print("Please re-enter your new PIN: ");
             String newPINTwo = scanner.next();
             while (!newPIN.equals(newPINTwo)) {
@@ -313,9 +319,9 @@ public class Hidden implements HiddenMechanism {
                     if (encryptedData[1].equals(toHexString(getSHA(String.valueOf(accountNumber))))) {
                         encryptedWriter
                                 .println(toHexString(getSHA(newPIN)) + "," + encryptedData[1] + "," + encryptedData[2]
-                                        + "," + encryptedData[3] + "," + toHexString(getSHA(String.valueOf(true))));
+                                        + "," + encryptedData[3] + "," + toHexString(getSHA(String.valueOf(false))));
                         dataWriter.println(
-                                newPIN + "," + dataData[1] + "," + dataData[2] + "," + dataData[3] + "," + true);
+                                newPIN + "," + dataData[1] + "," + dataData[2] + "," + dataData[3] + "," + false);
                     } else {
                         encryptedWriter.println(encryptedCurrentLine);
                         dataWriter.println(dataCurrentLine);

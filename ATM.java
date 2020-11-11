@@ -10,8 +10,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class ATM {
 	public static void main(String args[]) {
-		// Playground playground = new Playground();
-		// playground.populateDummyData();
+		// ATM atm = new ATM();
+		// atm.populateDummyData();
 		OptionsScreen optionsScreen = new OptionsScreen();
 		optionsScreen.main(args);
 	}
